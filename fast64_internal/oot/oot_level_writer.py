@@ -48,6 +48,7 @@ from .oot_utility import (
     ootConvertRotation,
     getSceneDirFromLevelName,
     isPathObject,
+    is_hackPL_enabled,
 )
 
 from .oot_level_classes import (
@@ -353,11 +354,18 @@ def readRoomData(
     room: OOTRoom,
     roomHeader: OOTRoomHeaderProperty,
     alternateRoomHeaders: OOTAlternateRoomHeaderProperty,
+    first_header_hackPL_usePointLights: "bool | None"=None,
 ):
     room.roomIndex = roomHeader.roomIndex
     room.roomBehaviour = getCustomProperty(roomHeader, "roomBehaviour")
     room.disableWarpSongs = roomHeader.disableWarpSongs
     room.showInvisibleActors = roomHeader.showInvisibleActors
+    if is_hackPL_enabled():
+        if first_header_hackPL_usePointLights is None:
+            room.hackPL_usePointLights = roomHeader.hackPL_usePointLights
+            first_header_hackPL_usePointLights = roomHeader.hackPL_usePointLights
+        else:
+            room.hackPL_usePointLights = first_header_hackPL_usePointLights
 
     # room heat behavior is active if the idle mode is 0x03
     room.linkIdleMode = getCustomProperty(roomHeader, "linkIdleMode") if not roomHeader.roomIsHot else "0x03"
@@ -399,20 +407,20 @@ def readRoomData(
     if alternateRoomHeaders is not None:
         if not alternateRoomHeaders.childNightHeader.usePreviousHeader:
             room.childNightHeader = room.getAlternateHeaderRoom(room.ownerName)
-            readRoomData(sceneName, room.childNightHeader, alternateRoomHeaders.childNightHeader, None)
+            readRoomData(sceneName, room.childNightHeader, alternateRoomHeaders.childNightHeader, None, first_header_hackPL_usePointLights)
 
         if not alternateRoomHeaders.adultDayHeader.usePreviousHeader:
             room.adultDayHeader = room.getAlternateHeaderRoom(room.ownerName)
-            readRoomData(sceneName, room.adultDayHeader, alternateRoomHeaders.adultDayHeader, None)
+            readRoomData(sceneName, room.adultDayHeader, alternateRoomHeaders.adultDayHeader, None, first_header_hackPL_usePointLights)
 
         if not alternateRoomHeaders.adultNightHeader.usePreviousHeader:
             room.adultNightHeader = room.getAlternateHeaderRoom(room.ownerName)
-            readRoomData(sceneName, room.adultNightHeader, alternateRoomHeaders.adultNightHeader, None)
+            readRoomData(sceneName, room.adultNightHeader, alternateRoomHeaders.adultNightHeader, None, first_header_hackPL_usePointLights)
 
         for i in range(len(alternateRoomHeaders.cutsceneHeaders)):
             cutsceneHeaderProp = alternateRoomHeaders.cutsceneHeaders[i]
             cutsceneHeader = room.getAlternateHeaderRoom(room.ownerName)
-            readRoomData(sceneName, cutsceneHeader, cutsceneHeaderProp, None)
+            readRoomData(sceneName, cutsceneHeader, cutsceneHeaderProp, None, first_header_hackPL_usePointLights)
             room.cutsceneHeaders.append(cutsceneHeader)
 
     if roomHeader.roomShape == "ROOM_SHAPE_TYPE_IMAGE":

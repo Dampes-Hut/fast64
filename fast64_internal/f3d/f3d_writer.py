@@ -1,4 +1,4 @@
-from typing import Union, Optional, Callable, Any, List
+from typing import Union, Optional, Callable, Any, List, TYPE_CHECKING
 from dataclasses import dataclass
 import functools
 import bpy, mathutils, os, re, copy, math
@@ -20,6 +20,7 @@ from .f3d_gbi import *
 from .f3d_bleed import BleedGraphics
 
 from ..utility import *
+from ..utility import is_oot_and_hackPL_enabled
 
 
 def getColorLayer(mesh: bpy.types.Mesh, layer="Col"):
@@ -1182,8 +1183,21 @@ def getTexDimensions(material):
     return texDimensions
 
 
-def saveOrGetF3DMaterial(material, fModel, obj, drawLayer, convertTextureData):
+def saveOrGetF3DMaterial(material, fModel, obj: bpy.types.Object, drawLayer, convertTextureData):
     print(f"Writing material {material.name}")
+
+    lighting_is_positional = False
+    if is_oot_and_hackPL_enabled():
+        parent = obj.parent
+        while not (parent is None or (parent.type == "EMPTY" and parent.ootEmptyType == "Room")):
+            parent = parent.parent
+        if parent is not None:
+            roomParent = parent
+            if TYPE_CHECKING:
+                from ..oot.room.properties import OOTRoomHeaderProperty
+            roomProp: "OOTRoomHeaderProperty" = roomParent.ootRoomHeader
+            lighting_is_positional = roomProp.hackPL_usePointLights
+
     if material.mat_ver > 3:
         f3dMat = material.f3d_mat
     else:
@@ -1318,9 +1332,9 @@ def saveOrGetF3DMaterial(material, fModel, obj, drawLayer, convertTextureData):
 
     defaults = bpy.context.scene.world.rdp_defaults
     if fModel.f3d.F3DEX_GBI_2:
-        saveGeoModeDefinitionF3DEX2(fMaterial, f3dMat.rdp_settings, defaults, fModel.matWriteMethod)
+        saveGeoModeDefinitionF3DEX2(fMaterial, f3dMat.rdp_settings, defaults, fModel.matWriteMethod, lighting_is_positional=lighting_is_positional)
     else:
-        saveGeoModeDefinition(fMaterial, f3dMat.rdp_settings, defaults, fModel.matWriteMethod)
+        saveGeoModeDefinition(fMaterial, f3dMat.rdp_settings, defaults, fModel.matWriteMethod, lighting_is_positional=lighting_is_positional)
     saveOtherModeHDefinition(
         fMaterial,
         f3dMat.rdp_settings,
@@ -1489,7 +1503,7 @@ def saveBitGeo(value, defaultValue, flagName, setGeo, clearGeo, matWriteMethod):
             clearGeo.flagList.append(flagName)
 
 
-def saveGeoModeCommon(saveFunc: Callable, settings: RDPSettings, defaults: RDPSettings, args: Any):
+def saveGeoModeCommon(saveFunc: Callable, settings: RDPSettings, defaults: RDPSettings, args: Any, lighting_is_positional=False):
     saveFunc(settings.g_zbuffer, defaults.g_zbuffer, "G_ZBUFFER", *args)
     saveFunc(settings.g_shade, defaults.g_shade, "G_SHADE", *args)
     saveFunc(settings.g_cull_front, defaults.g_cull_front, "G_CULL_FRONT", *args)
@@ -1504,7 +1518,12 @@ def saveGeoModeCommon(saveFunc: Callable, settings: RDPSettings, defaults: RDPSe
         saveFunc(settings.g_fresnel_color, defaults.g_fresnel_color, "G_FRESNEL_COLOR", *args)
         saveFunc(settings.g_fresnel_alpha, defaults.g_fresnel_alpha, "G_FRESNEL_ALPHA", *args)
     saveFunc(settings.g_fog, defaults.g_fog, "G_FOG", *args)
+
     saveFunc(settings.g_lighting, defaults.g_lighting, "G_LIGHTING", *args)
+    if is_oot_and_hackPL_enabled():
+        if lighting_is_positional:
+            saveFunc(settings.g_lighting, defaults.g_lighting, "G_LIGHTING_POSITIONAL", *args)
+
     saveFunc(settings.g_tex_gen, defaults.g_tex_gen, "G_TEXTURE_GEN", *args)
     saveFunc(settings.g_tex_gen_linear, defaults.g_tex_gen_linear, "G_TEXTURE_GEN_LINEAR", *args)
     saveFunc(settings.g_lod, defaults.g_lod, "G_LOD", *args)
@@ -1513,9 +1532,9 @@ def saveGeoModeCommon(saveFunc: Callable, settings: RDPSettings, defaults: RDPSe
         saveFunc(settings.g_clipping, defaults.g_clipping, "G_CLIPPING", *args)
 
 
-def saveGeoModeDefinitionF3DEX2(fMaterial, settings, defaults, matWriteMethod):
+def saveGeoModeDefinitionF3DEX2(fMaterial, settings, defaults, matWriteMethod, lighting_is_positional=False):
     geo = SPGeometryMode([], [])
-    saveGeoModeCommon(saveBitGeoF3DEX2, settings, defaults, (geo, matWriteMethod))
+    saveGeoModeCommon(saveBitGeoF3DEX2, settings, defaults, (geo, matWriteMethod), lighting_is_positional=lighting_is_positional)
 
     if len(geo.clearFlagList) != 0 or len(geo.setFlagList) != 0:
         if len(geo.clearFlagList) == 0:
@@ -1530,11 +1549,11 @@ def saveGeoModeDefinitionF3DEX2(fMaterial, settings, defaults, matWriteMethod):
             fMaterial.revert.commands.append(SPGeometryMode(geo.setFlagList, geo.clearFlagList))
 
 
-def saveGeoModeDefinition(fMaterial, settings, defaults, matWriteMethod):
+def saveGeoModeDefinition(fMaterial, settings, defaults, matWriteMethod, lighting_is_positional=False):
     setGeo = SPSetGeometryMode([])
     clearGeo = SPClearGeometryMode([])
 
-    saveGeoModeCommon(saveBitGeo, settings, defaults, (setGeo, clearGeo, matWriteMethod))
+    saveGeoModeCommon(saveBitGeo, settings, defaults, (setGeo, clearGeo, matWriteMethod), lighting_is_positional=lighting_is_positional)
 
     if len(setGeo.flagList) > 0:
         fMaterial.mat_only_DL.commands.append(setGeo)

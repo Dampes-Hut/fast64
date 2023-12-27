@@ -64,6 +64,7 @@ class OOT_Properties(bpy.types.PropertyGroup):
 
     version: bpy.props.IntProperty(name="OOT_Properties Version", default=0)
     hackerFeaturesEnabled: bpy.props.BoolProperty(name="Enable HackerOOT Features")
+    is_hackPL_enabled: bpy.props.BoolProperty(name="Enable Point Lights hacky support")
     headerTabAffectsVisibility: bpy.props.BoolProperty(
         default=False, name="Header Sets Actor Visibility", update=setAllActorsVisibility
     )

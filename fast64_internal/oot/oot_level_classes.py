@@ -386,6 +386,8 @@ class OOTRoom(OOTCommonCommands):
         self.customBehaviourX = None
         self.customBehaviourY = None
 
+        self.hackPL_usePointLights = None
+
         # Wind
         self.setWind = False
         self.windVector = [0, 0, 0]

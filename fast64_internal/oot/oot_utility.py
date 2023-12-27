@@ -7,7 +7,7 @@ from ast import parse, Expression, Num, UnaryOp, USub, Invert, BinOp
 from mathutils import Vector
 from bpy.types import Object
 from bpy.utils import register_class, unregister_class
-from typing import Callable
+from typing import Callable, TYPE_CHECKING
 from .oot_constants import ootSceneIDToName
 
 from ..utility import (
@@ -23,6 +23,9 @@ from ..utility import (
     hexOrDecInt,
     binOps,
 )
+
+if TYPE_CHECKING:
+    from . import OOT_Properties
 
 
 def isPathObject(obj: bpy.types.Object) -> bool:
@@ -939,3 +942,8 @@ def getNewPath(type: str, isClosedShape: bool):
     bpy.context.view_layer.active_layer_collection.collection.objects.link(newPath)
 
     return newPath
+
+
+def is_hackPL_enabled():
+    oot: "OOT_Properties" = bpy.context.scene.fast64.oot
+    return oot.is_hackPL_enabled

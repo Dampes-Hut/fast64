@@ -9,10 +9,20 @@ def getEchoSettingsCmd(outRoom: OOTRoom):
 def getRoomBehaviourCmd(outRoom: OOTRoom):
     showInvisibleActors = "true" if outRoom.showInvisibleActors else "false"
     disableWarpSongs = "true" if outRoom.disableWarpSongs else "false"
+    if outRoom.hackPL_usePointLights is None:
+        hackPL_usePointLights = None
+    else:
+        hackPL_usePointLights = "true" if outRoom.hackPL_usePointLights else "false"
+
+    sceneCmdName = "SCENE_CMD_ROOM_BEHAVIOR"
+
+    if hackPL_usePointLights is not None:
+        sceneCmdName = "SCENE_CMD_ROOM_BEHAVIOR_PL"
 
     return (
-        (indent + "SCENE_CMD_ROOM_BEHAVIOR(")
+        (indent + sceneCmdName + "(")
         + ", ".join([outRoom.roomBehaviour, outRoom.linkIdleMode, showInvisibleActors, disableWarpSongs])
+        + ("" if hackPL_usePointLights is None else f", {hackPL_usePointLights}")
         + ")"
     )
 

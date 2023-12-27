@@ -1633,3 +1633,11 @@ binOps = {
     ast.BitAnd: operator.and_,
     ast.BitXor: operator.xor,
 }
+
+
+def is_oot_and_hackPL_enabled():
+    if bpy.context.scene.gameEditorMode == "OOT":
+        from .oot.oot_utility import is_hackPL_enabled
+        return is_hackPL_enabled()
+    else:
+        return False

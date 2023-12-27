@@ -2,7 +2,14 @@ import bpy
 from bpy.types import PropertyGroup, UILayout, Image, Object
 from bpy.utils import register_class, unregister_class
 from ...utility import prop_split
-from ..oot_utility import drawCollectionOps, onMenuTabChange, onHeaderMenuTabChange, drawEnumWithCustom, drawAddButton
+from ..oot_utility import (
+    drawCollectionOps,
+    onMenuTabChange,
+    onHeaderMenuTabChange,
+    drawEnumWithCustom,
+    drawAddButton,
+    is_hackPL_enabled,
+)
 from ..oot_upgrade import upgradeRoomHeaders
 from .operators import OOT_SearchObjectEnumOperator
 
@@ -96,6 +103,7 @@ class OOTRoomHeaderProperty(PropertyGroup):
     roomBehaviourCustom: StringProperty(default="0x00")
     disableWarpSongs: BoolProperty(name="Disable Warp Songs")
     showInvisibleActors: BoolProperty(name="Show Invisible Actors")
+    hackPL_usePointLights: BoolProperty(name="Use Point Lights")
     linkIdleMode: EnumProperty(name="Link Idle Mode", items=ootEnumLinkIdle, default="0x00")
     linkIdleModeCustom: StringProperty(name="Link Idle Mode Custom", default="0x00")
     roomIsHot: BoolProperty(
@@ -148,7 +156,7 @@ class OOTRoomHeaderProperty(PropertyGroup):
 
             drawAddButton(box, len(self.bgImageList), "BgImage", None, objName)
 
-    def draw_props(self, layout: UILayout, dropdownLabel: str, headerIndex: int, objName: str):
+    def draw_props(self, layout: UILayout, dropdownLabel: str, headerIndex: "int | None", objName: str):
         from ..props_panel_main import OOT_ManualUpgrade
 
         if dropdownLabel is not None:
@@ -188,6 +196,12 @@ class OOTRoomHeaderProperty(PropertyGroup):
             drawEnumWithCustom(behaviourBox, self, "linkIdleMode", "Link Idle Mode", "")
             behaviourBox.prop(self, "disableWarpSongs", text="Disable Warp Songs")
             behaviourBox.prop(self, "showInvisibleActors", text="Show Invisible Actors")
+            if is_hackPL_enabled():
+                if headerIndex is None or headerIndex == 0:
+                    behaviourBox.prop(self, "hackPL_usePointLights", text="Use Point Lights")
+                else:
+                    behaviourBox.label(text="'Use Point Lights' must be the same for all headers")
+                    behaviourBox.label(text="Change it on the first header's properties")
 
             # Time
             skyboxAndTime = layout.column()
