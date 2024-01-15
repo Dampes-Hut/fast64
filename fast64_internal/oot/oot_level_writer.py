@@ -357,7 +357,7 @@ def readRoomData(
     room: OOTRoom,
     roomHeader: OOTRoomHeaderProperty,
     alternateRoomHeaders: OOTAlternateRoomHeaderProperty,
-    first_header_hackPL_usePointLights: "bool | None"=None,
+    first_header_hackPL_usePointLights: "bool | None" = None,
 ):
     room.roomIndex = roomHeader.roomIndex
     room.roomBehaviour = getCustomProperty(roomHeader, "roomBehaviour")
@@ -410,15 +410,33 @@ def readRoomData(
     if alternateRoomHeaders is not None:
         if not alternateRoomHeaders.childNightHeader.usePreviousHeader:
             room.childNightHeader = room.getAlternateHeaderRoom(room.ownerName)
-            readRoomData(sceneName, room.childNightHeader, alternateRoomHeaders.childNightHeader, None, first_header_hackPL_usePointLights)
+            readRoomData(
+                sceneName,
+                room.childNightHeader,
+                alternateRoomHeaders.childNightHeader,
+                None,
+                first_header_hackPL_usePointLights,
+            )
 
         if not alternateRoomHeaders.adultDayHeader.usePreviousHeader:
             room.adultDayHeader = room.getAlternateHeaderRoom(room.ownerName)
-            readRoomData(sceneName, room.adultDayHeader, alternateRoomHeaders.adultDayHeader, None, first_header_hackPL_usePointLights)
+            readRoomData(
+                sceneName,
+                room.adultDayHeader,
+                alternateRoomHeaders.adultDayHeader,
+                None,
+                first_header_hackPL_usePointLights,
+            )
 
         if not alternateRoomHeaders.adultNightHeader.usePreviousHeader:
             room.adultNightHeader = room.getAlternateHeaderRoom(room.ownerName)
-            readRoomData(sceneName, room.adultNightHeader, alternateRoomHeaders.adultNightHeader, None, first_header_hackPL_usePointLights)
+            readRoomData(
+                sceneName,
+                room.adultNightHeader,
+                alternateRoomHeaders.adultNightHeader,
+                None,
+                first_header_hackPL_usePointLights,
+            )
 
         for i in range(len(alternateRoomHeaders.cutsceneHeaders)):
             cutsceneHeaderProp = alternateRoomHeaders.cutsceneHeaders[i]

@@ -436,9 +436,9 @@ class OOTRoom(OOTCommonCommands):
         self.objectIDList = []
         self.lightInfoList: list[LightInfoStruct] = []
 
-        self.childNightHeader = None
-        self.adultDayHeader = None
-        self.adultNightHeader = None
+        self.childNightHeader: Optional[OOTRoom] = None
+        self.adultDayHeader: Optional[OOTRoom] = None
+        self.adultNightHeader: Optional[OOTRoom] = None
         self.cutsceneHeaders = []
 
         self.appendNullEntrance = False

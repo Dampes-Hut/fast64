@@ -87,7 +87,7 @@ def getLightInfoList(outRoom: OOTRoom, headerIndex: int):
 def getRoomData(outRoom: OOTRoom):
     roomC = CData()
 
-    roomHeaders = [
+    roomHeaders: list[tuple["OOTRoom | None", str]] = [
         (outRoom.childNightHeader, "Child Night"),
         (outRoom.adultDayHeader, "Adult Day"),
         (outRoom.adultNightHeader, "Adult Night"),
