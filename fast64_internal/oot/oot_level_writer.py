@@ -524,7 +524,7 @@ def ootConvertScene(originalSceneObj, transformMatrix, sceneName, DLFormat, conv
         readSceneData(scene, sceneObj.fast64.oot.scene, sceneObj.ootSceneHeader, sceneObj.ootAlternateSceneHeaders)
         processedRooms = set()
 
-        for obj in sceneObj.children_recursive:
+        for obj in sorted(sceneObj.children_recursive, key=lambda o: o.original_name):
             translation, rotation, scale, orientedRotation = getConvertedTransform(transformMatrix, sceneObj, obj, True)
 
             if obj.type == "EMPTY" and obj.ootEmptyType == "Room":
@@ -865,7 +865,7 @@ def ootProcessEmpties(scene, room, sceneObj, obj, transformMatrix):
         else:
             readCrawlspace(obj, scene, transformMatrix)
 
-    for childObj in obj.children:
+    for childObj in sorted(obj.children, key=lambda o: o.original_name):
         ootProcessEmpties(scene, room, sceneObj, childObj, transformMatrix)
 
 
