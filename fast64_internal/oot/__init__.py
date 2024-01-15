@@ -58,6 +58,8 @@ from .tools import (
     oot_operator_unregister,
 )
 
+from . import er_lights_ui
+
 
 class OOT_Properties(bpy.types.PropertyGroup):
     """Global OOT Scene Properties found under scene.fast64.oot"""
@@ -106,6 +108,7 @@ def oot_panel_unregister():
 
 
 def oot_register(registerPanels):
+    er_lights_ui.register()
     oot_operator_register()
     oot_utility_register()
     collision_ops_register()  # register first, so panel goes above mat panel
@@ -145,6 +148,7 @@ def oot_unregister(unregisterPanels):
     for cls in reversed(oot_classes):
         unregister_class(cls)
 
+    er_lights_ui.unregister()
     oot_operator_unregister()
     oot_utility_unregister()
     collision_ops_unregister()  # register first, so panel goes above mat panel

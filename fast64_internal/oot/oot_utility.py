@@ -249,10 +249,10 @@ class OOTObjectCategorizer:
 
 
 # This also sets all origins relative to the scene object.
-def ootDuplicateHierarchy(obj, ignoreAttr, includeEmpties, objectCategorizer):
+def ootDuplicateHierarchy(obj, ignoreAttr, includeEmpties, objectCategorizer, includeLights=False):
     # Duplicate objects to apply scale / modifiers / linked data
     bpy.ops.object.select_all(action="DESELECT")
-    ootSelectMeshChildrenOnly(obj, includeEmpties)
+    ootSelectMeshChildrenOnly(obj, includeEmpties, includeLights)
     obj.select_set(True)
     bpy.context.view_layer.objects.active = obj
     bpy.ops.object.duplicate()
@@ -334,14 +334,14 @@ def ootDuplicateHierarchy(obj, ignoreAttr, includeEmpties, objectCategorizer):
         raise Exception(str(e))
 
 
-def ootSelectMeshChildrenOnly(obj, includeEmpties):
+def ootSelectMeshChildrenOnly(obj, includeEmpties, includeLights=False):
     isMesh = obj.type == "MESH"
     isEmpty = (obj.type == "EMPTY" or obj.type == "CAMERA" or obj.type == "CURVE") and includeEmpties
-    if isMesh or isEmpty:
+    if isMesh or isEmpty or (includeLights and obj.type == "LIGHT"):
         obj.select_set(True)
         obj.original_name = obj.name
     for child in obj.children:
-        ootSelectMeshChildrenOnly(child, includeEmpties)
+        ootSelectMeshChildrenOnly(child, includeEmpties, includeLights)
 
 
 def ootCleanupScene(originalSceneObj, allObjs):

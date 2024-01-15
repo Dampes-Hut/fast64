@@ -1,5 +1,5 @@
 from .....utility import CData, indent
-from ....oot_level_classes import OOTRoom
+from ....oot_level_classes import OOTRoom, LightInfoStruct, LightInfoTypeEnum, LightParamsPointStruct
 from .actor import getActorList
 from .room_commands import getRoomCommandList
 
@@ -7,6 +7,11 @@ from .room_commands import getRoomCommandList
 def getHeaderDefines(outRoom: OOTRoom, headerIndex: int):
     """Returns a string containing defines for actor and object lists lengths"""
     headerDefines = ""
+
+    if len(outRoom.lightInfoList) > 0:
+        headerDefines += (
+            f"#define {outRoom.getLightInfoListLengthDefineName(headerIndex)} {len(outRoom.lightInfoList)}\n"
+        )
 
     if len(outRoom.objectIDList) > 0:
         headerDefines += f"#define {outRoom.getObjectLengthDefineName(headerIndex)} {len(outRoom.objectIDList)}\n"
@@ -33,6 +38,49 @@ def getObjectList(outRoom: OOTRoom, headerIndex: int):
     )
 
     return objectList
+
+
+def lightInfoToC(li: LightInfoStruct):
+    assert li.type in {LightInfoTypeEnum.LIGHT_POINT_GLOW, LightInfoTypeEnum.LIGHT_POINT_NOGLOW}
+    lipp = li.params
+    assert isinstance(lipp, LightParamsPointStruct)
+    params_struct_name = "point"
+    params_struct_c = (
+        (", ".join(map(str, [lipp.x, lipp.y, lipp.z])) + ",\n")
+        + ("{ " + ", ".join(map(str, lipp.color)) + " },\n")
+        + ("0,\n")
+        + (str(lipp.radius))
+    )
+    return (
+        "{\n"
+        + (indent + li.type.name + ",\n")
+        + (
+            (indent + f".params.{params_struct_name} = " + "{\n")
+            + "\n".join(indent + indent + line for line in params_struct_c.splitlines())
+            + "\n"
+            + (indent + "}\n")
+        )
+        + "}"
+    )
+
+
+def getLightInfoList(outRoom: OOTRoom, headerIndex: int):
+    lightInfoList = CData()
+    declarationBase = f"LightInfo {outRoom.lightInfoListName(headerIndex)}"
+
+    # .h
+    lightInfoList.header = f"extern {declarationBase}[];\n"
+
+    # .c
+    lightInfoList.source = (
+        (f"{declarationBase}[{outRoom.getLightInfoListLengthDefineName(headerIndex)}]" + " = {\n")
+        + "".join(
+            "\n".join(indent + line for line in lightInfoToC(li).splitlines()) + ",\n" for li in outRoom.lightInfoList
+        )
+        + "};\n\n"
+    )
+
+    return lightInfoList
 
 
 # Room Header
@@ -73,6 +121,9 @@ def getRoomData(outRoom: OOTRoom):
 
             if i == 0 and outRoom.hasAlternateHeaders():
                 roomC.source += altHeaderPtrList
+
+            if len(curHeader.lightInfoList) > 0:
+                roomC.append(getLightInfoList(curHeader, i))
 
             if len(curHeader.objectIDList) > 0:
                 roomC.append(getObjectList(curHeader, i))

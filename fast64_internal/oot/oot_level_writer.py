@@ -63,6 +63,9 @@ from .oot_level_classes import (
     OOTBGImage,
     addActor,
     addStartPosition,
+    LightInfoStruct,
+    LightInfoTypeEnum,
+    LightParamsPointStruct,
 )
 
 
@@ -317,7 +320,7 @@ def getConvertedTransform(transformMatrix, sceneObj, obj, handleOrientation):
     if handleOrientation:
         orientation = mathutils.Quaternion((1, 0, 0), math.radians(90.0))
     else:
-        orientation = mathutils.Matrix.Identity(4)
+        orientation = mathutils.Matrix.Identity(4).to_quaternion()
     return getConvertedTransformWithOrientation(transformMatrix, sceneObj, obj, orientation)
 
 
@@ -505,7 +508,7 @@ def ootConvertScene(originalSceneObj, transformMatrix, sceneName, DLFormat, conv
         hiddenState = unhideAllAndGetHiddenState(bpy.context.scene)
 
     # Don't remove ignore_render, as we want to reuse this for collision
-    sceneObj, allObjs = ootDuplicateHierarchy(originalSceneObj, None, True, OOTObjectCategorizer())
+    sceneObj, allObjs = ootDuplicateHierarchy(originalSceneObj, None, True, OOTObjectCategorizer(), True)
 
     if bpy.context.scene.exportHiddenGeometry:
         restoreHiddenState(hiddenState)
@@ -552,6 +555,8 @@ def ootConvertScene(originalSceneObj, transformMatrix, sceneName, DLFormat, conv
                 room.mesh.terminateDLs()
                 room.mesh.removeUnusedEntries()
                 ootProcessEmpties(scene, room, sceneObj, roomObj, transformMatrix)
+
+                room_fill_lightInfoList(room, sceneObj, roomObj, transformMatrix)
             elif obj.type == "EMPTY" and obj.ootEmptyType == "Water Box":
                 # 0x3F = -1 in 6bit value
                 ootProcessWaterBox(sceneObj, obj, transformMatrix, scene, 0x3F)
@@ -880,3 +885,47 @@ def ootProcessWaterBox(sceneObj, obj, transformMatrix, scene, roomIndex):
             obj.empty_display_size,
         )
     )
+
+
+# code is half attenuation at light_radius/4 : clearer in blender if the radius
+# corresponds to the half attenuation mark, not one fourth of it
+# PL_RADIUS_SCALE = 4
+# completely subjective but 3 looks more in-line with in-game
+PL_RADIUS_SCALE = 3
+
+
+def room_fill_lightInfoList(room: OOTRoom, sceneObj, roomObj: bpy.types.Object, transformMatrix):
+    """
+    transformMatrix = scaling only
+    """
+    print("room_fill_lightInfoList")
+    lightObjs = [obj for obj in roomObj.children_recursive if obj.type == "LIGHT"]
+    print([(o.name, o.type) for o in roomObj.children_recursive])
+    print(lightObjs)
+    for lo in sorted(lightObjs, key=lambda o: o.original_name):
+        lo_data = lo.data
+        assert isinstance(lo_data, bpy.types.Light)
+
+        # weird, but consistent with the rest
+        translation, rotation, scale, orientedRotation = getConvertedTransform(transformMatrix, sceneObj, lo, False)
+
+        if lo_data.type == "POINT":
+            assert isinstance(lo_data, bpy.types.PointLight)
+            lip = LightParamsPointStruct(
+                *translation,
+                [round(c * 255) for c in lo_data.color],
+                # shadow_soft_size is named "Radius" in the UI and displays a ring around it
+                round(bpy.context.scene.ootBlenderScale * lo_data.shadow_soft_size * PL_RADIUS_SCALE),
+            )
+            li = LightInfoStruct(
+                (
+                    LightInfoTypeEnum.LIGHT_POINT_GLOW
+                    if lo_data.er_lights_ui_isGlow
+                    else LightInfoTypeEnum.LIGHT_POINT_NOGLOW
+                ),
+                lip,
+            )
+            room.lightInfoList.append(li)
+        else:
+            print("ignored light", lo.name)
+    print(f"{room.lightInfoList=}")

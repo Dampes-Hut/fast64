@@ -55,6 +55,12 @@ def getObjectListCmd(outRoom: OOTRoom, headerIndex: int):
     ) + f"{outRoom.getObjectLengthDefineName(headerIndex)}, {outRoom.objectListName(headerIndex)}),\n"
 
 
+def getLightInfoListCmd(outRoom: OOTRoom, headerIndex: int):
+    return (
+        indent + "SCENE_CMD_LIGHT_LIST("
+    ) + f"{outRoom.getLightInfoListLengthDefineName(headerIndex)}, {outRoom.lightInfoListName(headerIndex)}),\n"
+
+
 def getActorListCmd(outRoom: OOTRoom, headerIndex: int):
     return (
         indent + "SCENE_CMD_ACTOR_LIST("
@@ -77,6 +83,7 @@ def getRoomCommandList(outRoom: OOTRoom, headerIndex: int):
         (outRoom.getAltHeaderListCmd(outRoom.alternateHeadersName()) if outRoom.hasAlternateHeaders() else "")
         + (",\n".join(getCmd(outRoom) for getCmd in getCmdFuncList) + ",\n")
         + (getWindSettingsCmd(outRoom) if outRoom.setWind else "")
+        + (getLightInfoListCmd(outRoom, headerIndex) if len(outRoom.lightInfoList) > 0 else "")
         + (getObjectListCmd(outRoom, headerIndex) if len(outRoom.objectIDList) > 0 else "")
         + (getActorListCmd(outRoom, headerIndex) if len(outRoom.actorList) > 0 else "")
         + outRoom.getEndCmd()

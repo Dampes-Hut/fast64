@@ -1,6 +1,8 @@
 import bpy
 import os
 import shutil
+import dataclasses
+import enum
 
 from typing import Optional
 from bpy.types import Object
@@ -370,6 +372,32 @@ class OOTRoomMeshGroup:
         return self.roomName + "_entry_" + str(self.entryIndex)
 
 
+class LightInfoTypeEnum(enum.Enum):
+    LIGHT_POINT_NOGLOW = 0
+    LIGHT_DIRECTIONAL = 1
+    LIGHT_POINT_GLOW = 2
+
+
+class LightParamsUnion:
+    pass
+
+
+@dataclasses.dataclass
+class LightParamsPointStruct:
+    x: int
+    y: int
+    z: int
+    color: tuple[int, int, int]
+    # drawGlow: bool  # used at run time for whether the glow is actually drawn?
+    radius: int
+
+
+@dataclasses.dataclass
+class LightInfoStruct:
+    type: LightInfoTypeEnum
+    params: LightParamsUnion
+
+
 class OOTRoom(OOTCommonCommands):
     def __init__(self, index, name, model, roomShape):
         self.ownerName = toAlnum(name)
@@ -406,6 +434,7 @@ class OOTRoom(OOTCommonCommands):
         self.echo = 0x00
 
         self.objectIDList = []
+        self.lightInfoList: list[LightInfoStruct] = []
 
         self.childNightHeader = None
         self.adultDayHeader = None
@@ -425,6 +454,9 @@ class OOTRoom(OOTCommonCommands):
     def objectListName(self, headerIndex):
         return self.roomName() + "_header" + format(headerIndex, "02") + "_objectList"
 
+    def lightInfoListName(self, headerIndex):
+        return self.roomName() + "_header" + format(headerIndex, "02") + "_lightInfoList"
+
     def actorListName(self, headerIndex):
         return self.roomName() + "_header" + format(headerIndex, "02") + "_actorList"
 
@@ -441,6 +473,9 @@ class OOTRoom(OOTCommonCommands):
 
     def getObjectLengthDefineName(self, headerIndex: int):
         return f"LENGTH_{self.objectListName(headerIndex).upper()}"
+
+    def getLightInfoListLengthDefineName(self, headerIndex: int):
+        return f"LENGTH_{self.lightInfoListName(headerIndex).upper()}"
 
     def getActorLengthDefineName(self, headerIndex: int):
         return f"LENGTH_{self.actorListName(headerIndex).upper()}"
