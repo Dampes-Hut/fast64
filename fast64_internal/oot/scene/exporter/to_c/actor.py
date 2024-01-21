@@ -98,10 +98,13 @@ def getSpawnActorList(outScene: OOTScene, headerIndex: int):
     # .h
     spawnActorList.header = f"extern {declarationBase}[];\n"
 
+    startPositionsItemsSorted = sorted(outScene.startPositions.items(), key=lambda item: item[0])
+    startPositions = [item[1] for item in startPositionsItemsSorted]
+
     # .c
     spawnActorList.source = (
         (f"{declarationBase}[]" + " = {\n")
-        + "".join(getActorEntry(spawnActor) for spawnActor in outScene.startPositions.values())
+        + "".join(getActorEntry(spawnActor) for spawnActor in startPositions)
         + "};\n\n"
     )
 
