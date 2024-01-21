@@ -14,6 +14,7 @@ from .operators import (
     OOT_SearchActorCueCmdTypeEnumOperator,
     CutsceneCmdAddBone,
     OOT_SearchPlayerCueIdEnumOperator,
+    MoveBoneToCamera,
 )
 
 
@@ -228,6 +229,7 @@ class CutsceneCmdCameraShotPointProperty(PropertyGroup):
         row = box.row()
         for propName in ["shotPointFrame", "shotPointViewAngle", "shotPointRoll"]:
             row.prop(self, propName)
+        box.operator(MoveBoneToCamera.bl_idname)
 
 
 class OOTCutsceneMotionProperty(PropertyGroup):

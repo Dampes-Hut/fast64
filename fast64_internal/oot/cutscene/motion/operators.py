@@ -1,4 +1,5 @@
 import bpy
+import mathutils
 
 from bpy.types import Object, Operator, Context, Armature
 from bpy.utils import register_class, unregister_class
@@ -347,6 +348,61 @@ class OOT_SearchPlayerCueIdEnumOperator(Operator):
         return {"RUNNING_MODAL"}
 
 
+class MoveBoneToCamera(Operator):
+    bl_idname = "object.fast64_oot_cs_move_bone_to_camera"
+    bl_label = "Move bone to camera"
+    bl_options = {"REGISTER", "UNDO"}
+
+    bone_length: bpy.props.FloatProperty(default=6)
+
+    def execute_edit_mode(self, cam_shot_obj: bpy.types.Object, cam_point_bone_name: str):
+        assert cam_shot_obj.type == "ARMATURE", cam_shot_obj.type
+        assert cam_shot_obj.mode == "EDIT", cam_shot_obj.mode
+
+        cam_point_edit_bone = cam_shot_obj.data.edit_bones[cam_point_bone_name]
+
+        cs_empty = cam_shot_obj.parent
+        assert cs_empty is not None
+        assert cs_empty.type == "EMPTY", cs_empty.type
+        assert cs_empty.ootEmptyType == "Cutscene", cs_empty.ootEmptyType
+
+        camera_objs = [c for c in cs_empty.children if c.type == "CAMERA"]
+        assert len(camera_objs) == 1, camera_objs
+        camera_obj = camera_objs[0]
+
+        eye = camera_obj.location
+
+        # if not quaternion just implement using the other rotation props
+        assert camera_obj.rotation_mode == "QUATERNION", camera_obj.rotation_mode
+        eyeToAtDir = camera_obj.rotation_quaternion @ mathutils.Vector((0, 0, -1))
+
+        at = eye + self.bone_length * eyeToAtDir
+
+        cam_point_edit_bone.head = eye
+        cam_point_edit_bone.tail = at
+
+    def execute(self, context):
+        cam_shot_obj = context.object
+        # active_bone may be Bone or EditBone, both have name
+        cam_point_bone_name = context.active_bone.name
+
+        prev_mode_is_object = False
+        if cam_shot_obj.mode == "OBJECT":
+            prev_mode_is_object = True
+            bpy.ops.object.select_all(action="DESELECT")
+            cam_shot_obj.select_set(True)
+            bpy.context.view_layer.objects.active = cam_shot_obj
+            bpy.ops.object.mode_set(mode="EDIT")
+
+        try:
+            self.execute_edit_mode(cam_shot_obj, cam_point_bone_name)
+        finally:
+            if prev_mode_is_object:
+                bpy.ops.object.mode_set(mode="OBJECT")
+
+        return {"FINISHED"}
+
+
 classes = (
     CutsceneCmdPlayPreview,
     CutsceneCmdAddBone,
@@ -357,6 +413,7 @@ classes = (
     CutsceneCmdCreateActorCueList,
     OOT_SearchActorCueCmdTypeEnumOperator,
     OOT_SearchPlayerCueIdEnumOperator,
+    MoveBoneToCamera,
 )
 
 
