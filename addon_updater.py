@@ -1165,6 +1165,9 @@ class SingletonUpdater:
         if text is None:
             return ()
 
+        if text.endswith("-hmc2024"):
+            text = text[:-len("-hmc2024")]
+
         segments = list()
         tmp = ''
         for char in str(text):

@@ -1,3 +1,7 @@
+# Fast64-hmc2024
+
+fast64 fork used for Dampé's Hut's entry in the HM 2024 competition https://github.com/Dampes-Hut/2024-horror .
+
 # Fast64
 
 This requires Blender 3.2+. Blender 4.0+ is recommended.
@@ -117,6 +121,8 @@ Be careful if testing the updater when using git, it may mess up the .git folder
 
 Also see the extensive documentation in the https://github.com/CGCookie/blender-addon-updater README.
 
-The "Update directly to main" button uses `bl_info["version"]` as the current version, and versions parsed from git tags as other versions. This means that to create a new version, the `bl_info` version should be bumped and a corresponding tag should be created (for example `"version": (1, 0, 2),` and a `v1.0.2` tag). This tag will then be available to update to, if it denotes a version that is more recent than the current version.
+The updater in this branch will only consider tags ending with `-hmc2024`.
+
+The "Update directly to hmc2024-horror" button uses `bl_info["version"]` as the current version, and versions parsed from git tags as other versions. This means that to create a new version, the `bl_info` version should be bumped and a corresponding tag should be created (for example `"version": (1, 0, 2),` and a `v1.0.2-hmc2024` tag). This tag will then be available to update to, if it denotes a version that is more recent than the current version.
 
 The "Install main / old version" button will install the latest revision from the `main` branch.

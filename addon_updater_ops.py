@@ -72,7 +72,7 @@ except Exception as e:
 # not match and have errors. Must be all lowercase and no spaces! Should also
 # be unique among any other addons that could exist (using this updater code),
 # to avoid clashes in operator registration.
-updater.addon = "fast64"
+updater.addon = "fast64_hmc2024"
 
 
 # -----------------------------------------------------------------------------
@@ -1264,6 +1264,10 @@ def skip_tag_function(self, tag):
             if tag["name"].lower() == branch:
                 return False
 
+    # Skip tags that don't end with -hmc2024
+    if not tag["name"].endswith("-hmc2024"):
+        return True
+
     # Function converting string to tuple, ignoring e.g. leading 'v'.
     # Be aware that this strips out other text that you might otherwise
     # want to be kept and accounted for when checking tags (e.g. v1.1a vs 1.1b)
@@ -1374,15 +1378,15 @@ def register(bl_info):
         return
     updater.clear_state()  # Clear internal vars, avoids reloading oddities.
 
-    # https://github.com/Fast-64/fast64
+    # https://github.com/Dampes-Hut/fast64
     updater.engine = "Github"
-    updater.user = "Fast-64"
+    updater.user = "Dampes-Hut"
     updater.repo = "fast64"
 
     # updater.addon = # define at top of module, MUST be done first
 
     # Website for manual addon download, optional but recommended to set.
-    updater.website = "https://github.com/Fast-64/fast64"
+    updater.website = "https://github.com/Dampes-Hut/fast64"
 
     # Used to check/compare versions.
     updater.current_version = bl_info["version"]
@@ -1455,7 +1459,7 @@ def register(bl_info):
     # Note: updater.include_branch_list defaults to ['master'] branch if set to
     # none. Example targeting another multiple branches allowed to pull from:
     # updater.include_branch_list = ['master', 'dev']
-    updater.include_branch_list = ["main"]
+    updater.include_branch_list = ["hmc2024-horror"]
 
     # Only allow manual install, thus prompting the user to open
     # the addon's web page to download, specifically: updater.website
