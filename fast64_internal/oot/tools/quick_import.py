@@ -108,6 +108,12 @@ def quick_import_exec(context: bpy.types.Context, sym_name: str):
         settings.animName = sym_name
         settings.folderName = object_name
         bpy.ops.object.oot_import_anim()
+    elif sym_def_type == "LinkAnimationHeader" and not is_array:
+        settings: OOTAnimImportSettingsProperty = context.scene.fast64.oot.animImportSettings
+        settings.isCustom = False
+        settings.isLink = True
+        settings.animName = sym_name
+        bpy.ops.object.oot_import_anim()
     else:
         raise QuickImportAborted(
             f"Don't know how to import {sym_def_type}"

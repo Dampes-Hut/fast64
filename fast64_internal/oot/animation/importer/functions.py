@@ -2,6 +2,7 @@ import mathutils
 import bpy
 import re
 import math
+import os.path
 from ....utility import PluginError, hexOrDecInt
 from ....f3d.f3d_parser import getImportData
 from ...oot_model_classes import ootGetIncludedAssetData
@@ -15,6 +16,7 @@ from ....utility_anim import (
 from ...oot_utility import (
     getStartBone,
     getNextBone,
+    oot_get_cur_version,
 )
 
 
@@ -26,16 +28,17 @@ def binangToRadians(value):
     return math.radians(value * 360 / (2**16))
 
 
-def getFrameData(filepath, animData, frameDataName):
+def getFrameData(filepath: str, animData: str, frameDataName: str):
     matchResult = re.search(re.escape(frameDataName) + "\s*\[\s*[0-9]*\s*\]\s*=\s*\{([^\}]*)\}", animData, re.DOTALL)
     if matchResult is None:
         raise PluginError("Cannot find animation frame data named " + frameDataName + " in " + filepath)
     data = matchResult.group(1)
-    frameData = [
-        int.from_bytes([int(value.strip()[2:4], 16), int(value.strip()[4:6], 16)], "big", signed=True)
-        for value in data.split(",")
-        if value.strip() != ""
-    ]
+    # split array into values as strings
+    frameData_str = [value_stripped for value in data.split(",") if (value_stripped := value.strip()) != ""]
+    # convert string values to int
+    frameData_int = [int(value, 16) for value in frameData_str]
+    # apply 2's complement to cast each value to s16
+    frameData = [value if value < 0x8000 else value - 0x10000 for value in frameData_int]
 
     return frameData
 
@@ -165,8 +168,22 @@ def ootImportLinkAnimationC(
     animData = getImportData([animFilepath])
     if not isCustomImport:
         basePath = bpy.path.abspath(bpy.context.scene.ootDecompPath)
-        animHeaderData = ootGetIncludedAssetData(basePath, [animHeaderFilepath], animHeaderData) + animHeaderData
-        animData = ootGetIncludedAssetData(basePath, [animFilepath], animData) + animData
+        animHeaderData = (
+            ootGetIncludedAssetData(
+                os.path.join(basePath, "extracted", oot_get_cur_version()),
+                [animHeaderFilepath],
+                animHeaderData,
+            )
+            + animHeaderData
+        )
+        animData = (
+            ootGetIncludedAssetData(
+                os.path.join(basePath, "extracted", oot_get_cur_version()),
+                [animFilepath],
+                animData,
+            )
+            + animData
+        )
 
     matchResult = re.search(
         re.escape(animHeaderName) + "\s*=\s*\{\s*\{\s*([^,\s]*)\s*\}\s*,\s*([^,\s]*)\s*\}\s*;",

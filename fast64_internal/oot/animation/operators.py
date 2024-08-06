@@ -14,6 +14,7 @@ from ..oot_utility import (
     checkEmptyName,
     ootGetObjectPath,
     getOOTScale,
+    oot_get_cur_version,
 )
 
 
@@ -84,8 +85,12 @@ def ootImportAnimationC(
         numLimbs = 21
         if not settings.isCustom:
             basePath = bpy.path.abspath(bpy.context.scene.ootDecompPath)
-            animFilepath = os.path.join(basePath, "assets/misc/link_animetion/link_animetion.c")
-            animHeaderFilepath = os.path.join(basePath, "assets/objects/gameplay_keep/gameplay_keep.c")
+            animFilepath = os.path.join(
+                basePath, "extracted", oot_get_cur_version(), "assets/misc/link_animetion/link_animetion.c"
+            )
+            animHeaderFilepath = os.path.join(
+                basePath, "extracted", oot_get_cur_version(), "assets/objects/gameplay_keep/gameplay_keep.c"
+            )
         else:
             animFilepath = filepath
             animHeaderFilepath = filepath
