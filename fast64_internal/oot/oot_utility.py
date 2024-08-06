@@ -458,12 +458,16 @@ def checkEmptyName(name):
         raise PluginError("No name entered for the exporter.")
 
 
+def oot_get_cur_version():
+    return "gc-eu-mq-dbg"
+
+
 def ootGetObjectPath(isCustomExport: bool, exportPath: str, folderName: str) -> str:
     if isCustomExport:
         filepath = exportPath
     else:
         filepath = os.path.join(
-            ootGetPath(exportPath, isCustomExport, "assets/objects/", folderName, False, False), folderName + ".c"
+            ootGetPath(exportPath, isCustomExport, f"extracted/{oot_get_cur_version()}/assets/objects/", folderName, False, False), folderName + ".c"
         )
     return filepath
 
@@ -473,7 +477,7 @@ def ootGetObjectHeaderPath(isCustomExport: bool, exportPath: str, folderName: st
         filepath = exportPath
     else:
         filepath = os.path.join(
-            ootGetPath(exportPath, isCustomExport, "assets/objects/", folderName, False, False), folderName + ".h"
+            ootGetPath(exportPath, isCustomExport, f"extracted/{oot_get_cur_version()}/assets/objects/", folderName, False, False), folderName + ".h"
         )
     return filepath
 

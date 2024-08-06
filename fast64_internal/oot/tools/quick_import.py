@@ -7,6 +7,7 @@ import bpy
 from ..f3d.properties import OOTDLImportSettings
 from ..skeleton.properties import OOTSkeletonImportSettings
 from ..animation.properties import OOTAnimImportSettingsProperty
+from ..oot_utility import oot_get_cur_version
 
 
 class QuickImportAborted(Exception):
@@ -36,7 +37,7 @@ def quick_import_exec(context: bpy.types.Context, sym_name: str):
     sym_def_pattern = re.compile(rf"([^\s]+)\s+{sym_name}\s*(\[[^\]]*\])?\s*=")
 
     base_dir_p = Path(context.scene.ootDecompPath)
-    assets_objects_dir_p = base_dir_p / "assets" / "objects"
+    assets_objects_dir_p = base_dir_p / "extracted" / oot_get_cur_version() / "assets" / "objects"
 
     all_found_defs: dict[Path, list[tuple[str, str]]] = dict()
 

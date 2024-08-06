@@ -1,12 +1,20 @@
 import re
 from typing import List
 import mathutils, bpy, math
+import os.path
 from ....f3d.f3d_gbi import F3D, get_F3D_GBI
 from ....f3d.f3d_parser import getImportData, parseF3D
 from ....utility import hexOrDecInt, applyRotation, PluginError
 from ...oot_f3d_writer import ootReadActorScale
 from ...oot_model_classes import OOTF3DContext, ootGetIncludedAssetData
-from ...oot_utility import ootGetObjectPath, getOOTScale, ootGetObjectHeaderPath, ootGetEnums, ootStripComments
+from ...oot_utility import (
+    ootGetObjectPath,
+    getOOTScale,
+    ootGetObjectHeaderPath,
+    ootGetEnums,
+    ootStripComments,
+    oot_get_cur_version,
+)
 from ...oot_texture_array import ootReadTextureArrays
 from ..constants import ootSkeletonImportDict
 from ..properties import OOTSkeletonImportSettings
@@ -269,7 +277,14 @@ def ootImportSkeletonC(basePath: str, importSettings: OOTSkeletonImportSettings)
 
     skeletonData = getImportData(filepaths)
     if overlayName is not None or isLink:
-        skeletonData = ootGetIncludedAssetData(basePath, filepaths, skeletonData) + skeletonData
+        skeletonData = (
+            ootGetIncludedAssetData(
+                os.path.join(basePath, "extracted", oot_get_cur_version()),
+                filepaths,
+                skeletonData,
+            )
+            + skeletonData
+        )
 
     matchResult = ootGetSkeleton(skeletonData, skeletonName, False)
     limbsName = matchResult.group(2)
@@ -278,7 +293,7 @@ def ootImportSkeletonC(basePath: str, importSettings: OOTSkeletonImportSettings)
     limbsData = matchResult.group(2)
     limbList = [entry.strip()[1:] for entry in ootStripComments(limbsData).split(",") if entry.strip() != ""]
 
-    f3dContext = OOTF3DContext(get_F3D_GBI(), limbList, basePath)
+    f3dContext = OOTF3DContext(get_F3D_GBI(), limbList, os.path.join(basePath, "extracted", oot_get_cur_version()))
     f3dContext.mat().draw_layer.oot = drawLayer
 
     if overlayName is not None and importSettings.autoDetectActorScale:
