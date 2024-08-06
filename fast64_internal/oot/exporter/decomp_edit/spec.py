@@ -235,6 +235,29 @@ class SpecUtility:
         # get the scene and current segment name and remove the scene
         sceneName = exportInfo.name
         sceneSegmentName = f"{sceneName}_scene"
+
+        sceneSegment_specSection = None
+        sceneSegment_specSectionEntryIndex = None
+        for section in specFile.sections:
+            for entryIndex, entry in enumerate(section.entries):
+                if entry.get_name() == sceneSegmentName or re.match(
+                    f"^{sceneSegmentName}\_room\_[0-9]+$", entry.get_name()
+                ):
+                    sceneSegment_specSection = section
+                    sceneSegment_specSectionEntryIndex = entryIndex
+        if sceneSegment_specSection is None:
+
+            def spec_add_entry(entry: SpecEntry):
+                specFile.append(entry)
+
+        else:
+            segmentsInsertIndex = sceneSegment_specSectionEntryIndex
+
+            def spec_add_entry(entry: SpecEntry):
+                nonlocal segmentsInsertIndex
+                sceneSegment_specSection.entries.insert(segmentsInsertIndex, entry)
+                segmentsInsertIndex += 1
+
         SpecUtility.remove_segments_from_spec(specFile, exportInfo.name)
 
         assert build_directory is not None
@@ -270,7 +293,7 @@ class SpecUtility:
                     sceneCmds.append(SpecCommand("include", f'"{includeDir}/{sceneSegmentName}_cs_{i}.o"'))
 
         sceneCmds.append(SpecCommand("number", "2"))
-        specFile.append(SpecEntry(sceneCmds))
+        spec_add_entry(SpecEntry(sceneCmds))
 
         # rooms
         for i in range(roomTotal):
@@ -294,7 +317,7 @@ class SpecUtility:
                 )
 
             roomCmds.append(SpecCommand("number", "3"))
-            specFile.append(SpecEntry(roomCmds))
+            spec_add_entry(SpecEntry(roomCmds))
 
         # finally, write the spec file
         writeFile(exportPath, specFile.to_c())
