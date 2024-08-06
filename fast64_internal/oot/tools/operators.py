@@ -275,7 +275,6 @@ class OOTQuickImport(Operator):
             "a skeleton (e.g. object_daiku_Skel_007958), "
             "an animation (with the appropriate skeleton selected, e.g. object_daiku_Anim_008164)"
         ),
-        default="gPlayerAnim_clink_demo_Tbox_open"
     )
 
     def invoke(self, context, event):
