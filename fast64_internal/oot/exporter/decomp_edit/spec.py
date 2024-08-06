@@ -92,28 +92,19 @@ class SpecFile:
         except FileNotFoundError:
             raise PluginError("ERROR: Can't find spec!")
 
-        # Find first instance of "/assets/scenes/", indicating a scene file
-        first_scene_include_index = data.index("/assets/scenes/")
-        if first_scene_include_index == -1:
-            return SpecFile(data, None, [])  # No scene files found - add to end
+        build_directory = "$(BUILD_DIR)"
 
-        # Get build directory, which is text right before /assets/scenes/...
-        build_directory = None
-        for dir in ["$(BUILD_DIR)", "build"]:
-            if data[:first_scene_include_index].endswith(dir):
-                build_directory = dir
+        first_beginseg_index = data.find("beginseg")
+        if first_beginseg_index == -1:
+            header_end_index = 0
+        else:
+            header_end_index = first_beginseg_index
 
-        # Go backwards up to previous "endseg" definition
-        try:
-            header_endseg_index = data[:first_scene_include_index].rfind("endseg")
-        except ValueError:
-            raise PluginError("endseg not found, scene segements cannot be the first segments in spec file")
-
-        header = data[: header_endseg_index + len("endseg")]
+        header = data[:header_end_index]
 
         # This technically includes data after scene segments
         # However, as long as we don't have to modify them, they should be fine
-        lines = data[header_endseg_index + len("endseg") :].split("\n")
+        lines = data[header_end_index:].split("\n")
         lines = list(filter(None, lines))  # removes empty lines
         lines = [line.strip() for line in lines]
 
@@ -185,7 +176,7 @@ class SpecFile:
                     return
 
     def to_c(self):
-        return f"{self.header}\n\n" + "".join(section.to_c() for section in self.sections)
+        return f"{self.header}" + "".join(section.to_c() for section in self.sections)
 
 
 class SpecUtility:
@@ -200,15 +191,15 @@ class SpecUtility:
 
     @staticmethod
     def remove_segments_from_spec(spec_file: SpecFile, scene_name: str):
-        # get the scene and current segment name and remove the scene
-        scene_segment_name = f"{scene_name}_scene"
-        spec_file.remove(scene_segment_name)
+        segments_to_remove: list[str] = []
+
+        # scene segment
+        segments_to_remove.append(f"{scene_name}_scene")
 
         # mark the other scene elements to remove (like rooms)
-        segments_to_remove: list[str] = []
         for entry in spec_file.get_entries_flattened():
             # Note: you cannot do startswith(scene_name), ex. entra vs entra_n
-            if entry.get_name() == f"{scene_name}_scene" or re.match(f"^{scene_name}\_room\_[0-9]+$", entry.get_name()):
+            if re.match(f"^{scene_name}\_room\_[0-9]+$", entry.get_name()):
                 segments_to_remove.append(entry.get_name())
 
         # remove the segments
@@ -228,7 +219,7 @@ class SpecUtility:
                 csTotal += len(cs.cutscene.entries)
 
         # get the spec's data
-        exportPath = os.path.join(exportInfo.exportPath, "spec")
+        exportPath = os.path.join(exportInfo.exportPath, "spec.d", "maps")
         specFile = SpecFile.new(exportPath)
         build_directory = specFile.build_directory
 
