@@ -39,7 +39,7 @@ def exportAnimationC(armatureObj: bpy.types.Object, settings: OOTAnimExportSetti
             settings.isCustom,
             "assets/misc/link_animetion",
             settings.folderName if settings.isCustom else "",
-            False,
+            True,
             False,
         )
         headerPath = ootGetPath(
@@ -47,7 +47,7 @@ def exportAnimationC(armatureObj: bpy.types.Object, settings: OOTAnimExportSetti
             settings.isCustom,
             "assets/objects/gameplay_keep",
             settings.folderName if settings.isCustom else "",
-            False,
+            True,
             False,
         )
         writeCData(
@@ -60,8 +60,8 @@ def exportAnimationC(armatureObj: bpy.types.Object, settings: OOTAnimExportSetti
         )
 
         if not settings.isCustom:
-            addIncludeFiles("link_animetion", path, ootAnim.dataName())
-            addIncludeFiles("gameplay_keep", headerPath, ootAnim.headerName)
+            addIncludeFiles("link_animetion_mod", path, ootAnim.dataName())
+            addIncludeFiles("gameplay_keep_mod", headerPath, ootAnim.headerName)
 
     else:
         ootAnim = ootExportNonLinkAnimation(armatureObj, convertTransformMatrix, name)

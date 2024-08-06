@@ -232,9 +232,12 @@ def addIncludeFiles(objectName, objectPath, assetName):
 def addIncludeFilesExtension(objectName, objectPath, assetName, extension):
     include = '#include "' + assetName + "." + extension + '"\n'
     if not os.path.exists(objectPath):
-        raise PluginError(objectPath + " does not exist.")
+        os.makedirs(objectPath, exist_ok=True)
     path = os.path.join(objectPath, objectName + "." + extension)
-    data = getDataFromFile(path)
+    if not os.path.exists(path):
+        data = ""
+    else:
+        data = getDataFromFile(path)
 
     if include not in data:
         data += "\n" + include
@@ -467,7 +470,15 @@ def ootGetObjectPath(isCustomExport: bool, exportPath: str, folderName: str) -> 
         filepath = exportPath
     else:
         filepath = os.path.join(
-            ootGetPath(exportPath, isCustomExport, f"extracted/{oot_get_cur_version()}/assets/objects/", folderName, False, False), folderName + ".c"
+            ootGetPath(
+                exportPath,
+                isCustomExport,
+                f"extracted/{oot_get_cur_version()}/assets/objects/",
+                folderName,
+                False,
+                False,
+            ),
+            folderName + ".c",
         )
     return filepath
 
@@ -477,7 +488,15 @@ def ootGetObjectHeaderPath(isCustomExport: bool, exportPath: str, folderName: st
         filepath = exportPath
     else:
         filepath = os.path.join(
-            ootGetPath(exportPath, isCustomExport, f"extracted/{oot_get_cur_version()}/assets/objects/", folderName, False, False), folderName + ".h"
+            ootGetPath(
+                exportPath,
+                isCustomExport,
+                f"extracted/{oot_get_cur_version()}/assets/objects/",
+                folderName,
+                False,
+                False,
+            ),
+            folderName + ".h",
         )
     return filepath
 
